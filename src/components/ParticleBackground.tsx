@@ -1,32 +1,30 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 const ParticleBackground: React.FC = () => {
-  // Canvas reference and animation frame reference
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
+  const animationFrameIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Get canvas element
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas dimensions
+    // Function to resize canvas
     const resizeCanvas = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     };
 
     // Initialize canvas size
     resizeCanvas();
+    
+    // Add resize listener
     window.addEventListener('resize', resizeCanvas);
 
-    // Particle class
+    // Create particle class
     class Particle {
       x: number;
       y: number;
@@ -36,10 +34,8 @@ const ParticleBackground: React.FC = () => {
       color: string;
 
       constructor() {
-        const width = canvas.width;
-        const height = canvas.height;
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
         this.size = Math.random() * 1.5 + 0.5;
         this.speedX = Math.random() * 0.5 - 0.25;
         this.speedY = Math.random() * 0.5 - 0.25;
@@ -73,21 +69,21 @@ const ParticleBackground: React.FC = () => {
       }
     }
 
-    // Create particles
-    const width = canvas.width;
-    const height = canvas.height;
-    const particleCount = Math.min(50, Math.max(20, width * height / 20000));
-    const particles: Particle[] = [];
+    // Calculate particle count based on screen size
+    const particleCount = Math.min(50, Math.max(20, (canvas.width * canvas.height) / 20000));
     
+    // Create particles
+    const particles: Particle[] = [];
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle());
     }
 
     // Animation function
     const animate = () => {
+      // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Create connections between particles
+      // Draw connections between particles
       ctx.lineWidth = 0.3;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i; j < particles.length; j++) {
@@ -111,8 +107,8 @@ const ParticleBackground: React.FC = () => {
         particle.draw();
       }
       
-      // Request next frame
-      animationFrameRef.current = requestAnimationFrame(animate);
+      // Continue animation loop
+      animationFrameIdRef.current = requestAnimationFrame(animate);
     };
     
     // Start animation
@@ -121,8 +117,8 @@ const ParticleBackground: React.FC = () => {
     // Cleanup function
     return () => {
       window.removeEventListener('resize', resizeCanvas);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
       }
     };
   }, []);
