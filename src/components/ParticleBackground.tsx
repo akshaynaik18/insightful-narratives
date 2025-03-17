@@ -1,36 +1,30 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 const ParticleBackground: React.FC = () => {
-  // Simple canvas animation for particles
-  const [mounted, setMounted] = useState(false);
+  // Canvas reference and animation frame reference
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    
-    const canvas = document.getElementById('particleCanvas') as HTMLCanvasElement;
+    // Get canvas element
+    const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    
+    // Set canvas dimensions
     const resizeCanvas = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
       canvas.width = width;
       canvas.height = height;
     };
 
-    window.addEventListener('resize', resizeCanvas);
+    // Initialize canvas size
     resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
     // Particle class
     class Particle {
@@ -42,6 +36,8 @@ const ParticleBackground: React.FC = () => {
       color: string;
 
       constructor() {
+        const width = canvas.width;
+        const height = canvas.height;
         this.x = Math.random() * width;
         this.y = Math.random() * height;
         this.size = Math.random() * 1.5 + 0.5;
@@ -63,8 +59,9 @@ const ParticleBackground: React.FC = () => {
         this.x += this.speedX;
         this.y += this.speedY;
         
-        if (this.x > width || this.x < 0) this.speedX = -this.speedX;
-        if (this.y > height || this.y < 0) this.speedY = -this.speedY;
+        // Bounce off edges
+        if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+        if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
       }
 
       draw() {
@@ -77,6 +74,8 @@ const ParticleBackground: React.FC = () => {
     }
 
     // Create particles
+    const width = canvas.width;
+    const height = canvas.height;
     const particleCount = Math.min(50, Math.max(20, width * height / 20000));
     const particles: Particle[] = [];
     
@@ -86,9 +85,7 @@ const ParticleBackground: React.FC = () => {
 
     // Animation function
     const animate = () => {
-      if (!ctx || !mounted) return;
-      
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // Create connections between particles
       ctx.lineWidth = 0.3;
@@ -114,21 +111,25 @@ const ParticleBackground: React.FC = () => {
         particle.draw();
       }
       
-      if (mounted) {
-        requestAnimationFrame(animate);
-      }
+      // Request next frame
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
     
+    // Start animation
     animate();
     
+    // Cleanup function
     return () => {
       window.removeEventListener('resize', resizeCanvas);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
-  }, [mounted]);
+  }, []);
 
   return (
     <canvas
-      id="particleCanvas"
+      ref={canvasRef}
       className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-40 z-0"
     />
   );
