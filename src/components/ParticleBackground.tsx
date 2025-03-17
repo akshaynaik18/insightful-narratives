@@ -1,6 +1,5 @@
 
-import React, { useCallback } from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const ParticleBackground: React.FC = () => {
   // Simple canvas animation for particles
@@ -11,9 +10,12 @@ const ParticleBackground: React.FC = () => {
     return () => setMounted(false);
   }, []);
 
-  const canvasRef = useCallback((canvas: HTMLCanvasElement | null) => {
-    if (!canvas || !mounted) return;
-
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const canvas = document.getElementById('particleCanvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -126,7 +128,7 @@ const ParticleBackground: React.FC = () => {
 
   return (
     <canvas
-      ref={canvasRef}
+      id="particleCanvas"
       className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-40 z-0"
     />
   );
